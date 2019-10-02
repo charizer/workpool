@@ -19,7 +19,7 @@ func NewPool(numWorkers int, jobQueueLen int) *Pool {
 	return pool
 }
 
-func (p *Pool) Put(job Job){
+func (p *Pool) Put(job Job) {
 	p.JobQueue <- job
 }
 

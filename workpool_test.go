@@ -1,9 +1,9 @@
 package workpool
 
 import (
-	"io/ioutil"
 	"log"
 	"runtime"
+	"sync/atomic"
 	"testing"
 )
 
@@ -14,21 +14,31 @@ func init() {
 }
 
 type TestBenchJob struct {
-	Num int
+	Num  uint64
+	Pool *Pool
 }
 
 func (t *TestBenchJob) Exec() error {
+	defer t.Pool.JobDone()
 	log.Printf("I am worker! Number %d\n", t.Num)
 	return nil
 }
 
-func BenchmarkPool(b *testing.B) {
-	pool := NewPool(1, 10)
+func TestNewPool(t *testing.T) {
+	pool := NewPool(1000, 10000)
 	defer pool.Release()
 
-	log.SetOutput(ioutil.Discard)
-
-	for n := 0; n < b.N; n++ {
-		pool.Put(&TestBenchJob{Num: n})
+	iterations := 100
+	pool.WaitCount(iterations)
+	arg := uint64(1)
+	for i := 0; i < iterations; i++ {
+		job := &TestBenchJob{
+			Num:  arg,
+			Pool: pool,
+		}
+		atomic.AddUint64(&arg, 1)
+		pool.JobQueue <- job
 	}
+	pool.WaitAll()
+	t.Log("work run over")
 }

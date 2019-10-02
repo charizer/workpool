@@ -26,7 +26,7 @@ func (w *Worker) Start() {
 			select {
 			case job := <-w.jobChannel:
 				if err := job.Exec(); err != nil {
-					fmt.Sprintf("excute job failed with err: %v\n", err)
+					fmt.Printf("excute job failed with err: %v\n", err)
 				}
 			case <-w.stop:
 				w.stop <- struct{}{}
